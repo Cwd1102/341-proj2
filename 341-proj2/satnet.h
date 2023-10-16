@@ -117,6 +117,16 @@ private:
     // ***************************************************
     // Any private helper functions must be delared here!
     // ***************************************************
-    int returnHeight(const Sat& satellite, Sat& current, int height);
+    //int returnHeight(const Sat& satellite, Sat& current, int height);
+    Sat* findMin(Sat* satNode);
+    Sat* findMax(Sat* satNode);
+    Sat* insert(const Sat& sat, Sat*& Node);
+    void updateHeight(Sat* satNode);
+    Sat* reBal(Sat* satNode);
+    Sat* leftRot(Sat* satNode);
+    Sat* rightRot(Sat* satNode);
+    int checkBal(Sat* satNode);
+    Sat* remove(Sat* satNode, const int& id);
+    void clear(Sat* satNode);
 };
 #endif
