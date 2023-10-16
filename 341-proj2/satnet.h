@@ -117,6 +117,6 @@ private:
     // ***************************************************
     // Any private helper functions must be delared here!
     // ***************************************************
-
+    int returnHeight(const Sat& satellite, Sat& current, int height);
 };
 #endif
