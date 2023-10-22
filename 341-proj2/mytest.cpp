@@ -112,6 +112,8 @@ public:
     bool insertEdge();
     bool interstError();
     bool removeNormal();
+    bool removeEdge();
+    bool removeError();
 private:
 };
 
@@ -148,6 +150,22 @@ int main() {
 	}
     else {
 				cout << "removeNormal" << FAIL << endl;
+	}
+
+    cout << "Testing removeEdge" << endl;
+    if (myTester.removeEdge()) {
+				cout << "removeEdge" << PASS << endl;
+	}
+    else {
+				cout << "removeEdge" << FAIL << endl;
+	}
+
+	cout << "Testing removeError" << endl;
+    if (myTester.removeError()) {
+				cout << "removeError" << PASS << endl;
+	}
+    else {
+				cout << "removeError" << FAIL << endl;
 	}
 
 	return 0;
@@ -255,6 +273,57 @@ bool Tester::removeNormal() {
 			return false;
 		}
 	}
+
+	return true;
+}
+
+bool Tester::removeEdge() {
+	Random idGen(MINID, MAXID);
+	Random inclinGen(0, 3);  // there are 4 inclination
+	Random altGen(0, 3);     // there are 4 altitudes
+	SatNet network;
+
+	int teamSize = 100;
+	int tempArray[100]{};
+	int ID = 0;
+    for (int i = 0; i < teamSize; i++) {
+		ID = idGen.getRandNum();
+		tempArray[i] = ID;
+		Sat satellite(ID, static_cast<ALT>(altGen.getRandNum()),static_cast<INCLIN>(inclinGen.getRandNum()));
+		network.insert(satellite);
+	}
+    for (int i = 0; i < teamSize; i++) {
+		network.remove(tempArray[99]);
+	}
+    if (network.findSatellite(tempArray[99]) == true) {
+		return false;
+	}
+
+	return true;
+}
+
+bool Tester::removeError() {
+	Random idGen(MINID, MAXID);
+	Random inclinGen(0, 3);  // there are 4 inclination
+	Random altGen(0, 3);     // there are 4 altitudes
+	SatNet network;
+    int bal = 0;
+
+	int teamSize = 100;
+	int tempArray[100]{};
+	int ID = 0;
+    for (int i = 0; i < teamSize; i++) {
+		ID = idGen.getRandNum();
+		tempArray[i] = ID;
+		Sat satellite(ID, static_cast<ALT>(altGen.getRandNum()),static_cast<INCLIN>(inclinGen.getRandNum()));
+		network.insert(satellite);
+	}
+    bal = network.checkBal(network.m_root);
+	network.remove(10);
+    if (network.checkBal(network.m_root) != bal) {
+		return false;
+	}
+
 
 	return true;
 }
