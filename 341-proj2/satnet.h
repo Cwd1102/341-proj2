@@ -107,7 +107,7 @@ public:
     bool setState(int id, STATE state);
     void removeDeorbited();//removes all deorbited satellites from the tree
     bool findSatellite(int id) const;//returns true if the satellite is in tree
-    int countSatellites(INCLIN degree) const;
+    int countSatellites(INCLIN degree) const;//returns the number of satellites with the given inclination
 
 private:
     Sat* m_root;    //the root of the BST
@@ -131,5 +131,6 @@ private:
     Sat* find(Sat* aNode, const int& element);
     void clear(Sat* satNode);
     int countSatellites(INCLIN degree, Sat* satNode) const;
+
 };
 #endif

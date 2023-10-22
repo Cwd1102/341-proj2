@@ -251,8 +251,9 @@ Sat* SatNet::reBal(Sat* satNode) {
         satNode->m_left = leftRot(satNode->m_left);
         return rightRot(satNode);
     }
-    else
+    else {
         return satNode;
+    }
 }
 
 Sat* SatNet::leftRot(Sat* satNode) {
@@ -291,12 +292,15 @@ int SatNet::checkBal(Sat* satNode) {
 
 Sat* SatNet::remove(Sat* satNode, const int& element) {
     Sat* temp;
-    if (satNode == nullptr)
+    if (satNode == nullptr) {
         return nullptr;
-    else if (element < satNode->getID())
+    }
+    else if (element < satNode->getID()) {
         satNode->m_left = remove(satNode->m_left, element);
-    else if (element > satNode->getID())
+    }
+    else if (element > satNode->getID()) {
         satNode->m_right = remove(satNode->m_right, element);
+    }
     else if (satNode->m_left and satNode->m_right) {
         temp = findMin(satNode->m_right);
         satNode->m_id = temp->getID();
@@ -352,4 +356,3 @@ void SatNet::updateHeight(Sat* satNode) {
     }
     satNode->m_height = max(leftHeight, rightHeight) + 1;
 }
-

@@ -116,6 +116,10 @@ public:
     bool removeError();
     bool checkInsertBal();
     bool checkRemoveBal();
+    bool checkDeorbited();
+    bool checkDeorbitedEdge();
+    bool checkDeorbitError();
+
 private:
 };
 
@@ -161,7 +165,7 @@ int main() {
     else {
 				cout << "removeEdge" << FAIL << endl;
 	}
-
+    
 	cout << "Testing removeError" << endl;
     if (myTester.removeError()) {
 				cout << "removeError" << PASS << endl;
@@ -183,6 +187,22 @@ int main() {
 	}
     else {
 				cout << "checkRemoveBal" << FAIL << endl;
+	}
+
+    cout << "Testing checkDeorbited" << endl;
+    if (myTester.checkDeorbited()) {
+				cout << "checkDeorbited" << PASS << endl;
+	}
+    else {
+				cout << "checkDeorbited" << FAIL << endl;
+	}
+
+    cout << "Testing checkDeorbitedEdge" << endl;
+    if (myTester.checkDeorbitedEdge()) {
+				cout << "checkDeorbitedEdge" << PASS << endl;
+	}
+    else {
+				cout << "checkDeorbitedEdge" << FAIL << endl;
 	}
 
 	return 0;
@@ -361,28 +381,93 @@ bool Tester::checkInsertBal() {
 }
 
 bool Tester::checkRemoveBal() {
+    Random idGen(MINID, MAXID);
+    Random inclinGen(0, 3);  // there are 4 inclination
+    Random altGen(0, 3);     // there are 4 altitudes
+    SatNet network;
+    int bal = 0;
+
+    int teamSize = 100;
+    int tempArray[100]{};
+    int ID = 0;
+    for (int i = 0; i < teamSize; i++) {
+        ID = idGen.getRandNum();
+        tempArray[i] = ID;
+        Sat satellite(ID, static_cast<ALT>(altGen.getRandNum()), static_cast<INCLIN>(inclinGen.getRandNum()));
+        network.insert(satellite);
+    }
+    for (int i = 0; i < teamSize; i++) {
+        network.remove(tempArray[i]);
+        bal = network.checkBal(network.m_root);
+        if (bal > 1 || bal < -1) {
+            return false;
+        }
+    }
+    return true;
+}
+
+bool Tester::checkDeorbited() {
 	Random idGen(MINID, MAXID);
 	Random inclinGen(0, 3);  // there are 4 inclination
 	Random altGen(0, 3);     // there are 4 altitudes
 	SatNet network;
 	int bal = 0;
-
+    int j = 0;
 	int teamSize = 100;
 	int tempArray[100]{};
+    int idList[30]{};
 	int ID = 0;
     for (int i = 0; i < teamSize; i++) {
 		ID = idGen.getRandNum();
 		tempArray[i] = ID;
-		Sat satellite(ID, static_cast<ALT>(altGen.getRandNum()),static_cast<INCLIN>(inclinGen.getRandNum()));
+		Sat satellite(ID, static_cast<ALT>(altGen.getRandNum()), static_cast<INCLIN>(inclinGen.getRandNum()));
 		network.insert(satellite);
 	}
+
+    for (int i = 0; i < 30; i++) {
+        network.setState(tempArray[i], DEORBITED);
+        idList[j] = tempArray[i];
+        j++;
+    }
+
+    network.removeDeorbited();
     for (int i = 0; i < teamSize; i++) {
-		network.remove(tempArray[i]);
-		bal = network.checkBal(network.m_root);
-        if (bal > 1 || bal < -1) {
+        if (network.findSatellite(tempArray[i]) == true) {
 			return false;
 		}
 	}
+	return true;
+}
 
+bool Tester::checkDeorbitedEdge() {
+	Random idGen(MINID, MAXID);
+	Random inclinGen(0, 3);  // there are 4 inclination
+	Random altGen(0, 3);     // there are 4 altitudes
+	SatNet network;
+	int bal = 0;
+    int j = 0;
+	int teamSize = 100;
+	int tempArray[100]{};
+    int idList[30]{};
+	int ID = 0;
+
+    for (int i = 0; i < teamSize; i++) {
+		ID = idGen.getRandNum();
+        tempArray[i] = ID;
+		Sat satellite(ID, static_cast<ALT>(altGen.getRandNum()), static_cast<INCLIN>(inclinGen.getRandNum()));
+		network.insert(satellite);
+	}
+
+    for (int i = 30; i < 50; i++) {
+        network.setState(tempArray[i], DEORBITED);
+        idList[j] = tempArray[i];
+        j++;
+    }
+    network.removeDeorbited();
+    for (int i = 0; i < 30; i++) {
+		if (network.findSatellite(idList[i]) == true) {
+            return false;
+        }
+    }
 	return true;
 }
