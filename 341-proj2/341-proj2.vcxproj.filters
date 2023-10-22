@@ -23,7 +23,7 @@
     <ClCompile Include="satnet.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="driver.cpp">
+    <ClCompile Include="mytest.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

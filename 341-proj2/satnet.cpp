@@ -5,20 +5,27 @@ SatNet::SatNet() {
 }
 
 SatNet::~SatNet() {
-    clear();
+    if (m_root != nullptr) {
+        clear();
+	}
 }
 
 void SatNet::insert(const Sat& satellite) {
+    if (satellite.getID() < MINID or satellite.getID() > MAXID) {
+		return;
+	}
     m_root = insert(satellite, m_root);
 }
 
 void SatNet::clear() {
-    clear(m_root);
-	m_root = nullptr;
+    if (m_root != nullptr) {
+        clear(m_root);
+        m_root = nullptr;
+    }
 }
 
 void SatNet::remove(int id) {
-    remove(m_root, id);
+    m_root = remove(m_root, id);
 }
 
 void SatNet::dumpTree() const {
@@ -36,28 +43,28 @@ void SatNet::dump(Sat* satellite) const {
 }
 
 void SatNet::listSatellites() const {
-    Sat* currentNode = m_root;
-    while (currentNode != nullptr) {
-        if (currentNode->getLeft() == nullptr) {
-            cout << currentNode->getID() << ": " << currentNode->getStateStr() << ": " << currentNode->getInclinStr() << ": " << currentNode->getAltStr() << endl;
-            currentNode = currentNode->getRight();
+    Sat* currNode = m_root;
+    while (currNode != nullptr) {
+        if (currNode->getLeft() == nullptr) {
+            cout << currNode->getID() << ": " << currNode->getStateStr() << ": " << currNode->getInclinStr() << ": " << currNode->getAltStr() << endl;
+            currNode = currNode->getRight();
         }
         else {
-            Sat* prevNode = currentNode->getLeft();
-            while (prevNode->getRight() != nullptr && prevNode->getRight() != currentNode) {
+            Sat* prevNode = currNode->getLeft();
+            while (prevNode->getRight() != nullptr and prevNode->getRight() != currNode) {
                 prevNode = prevNode->getRight();
             }
 
             if (prevNode->getRight() == nullptr) {
-                prevNode->setRight(currentNode);
-                currentNode = currentNode->getLeft();
+                prevNode->setRight(currNode);
+                currNode = currNode->getLeft();
             }
             else {
                 prevNode->setRight(nullptr);
 
-                cout << currentNode->getID() << ": " << currentNode->getStateStr() << ": " << currentNode->getInclinStr() << ": " << currentNode->getAltStr() << endl;
+                cout << currNode->getID() << ": " << currNode->getStateStr() << ": " << currNode->getInclinStr() << ": " << currNode->getAltStr() << endl;
 
-                currentNode = currentNode->getRight();
+                currNode = currNode->getRight();
             }
         }
     }
@@ -76,32 +83,32 @@ bool SatNet::setState(int id, STATE state) {
 }
 
 void SatNet::removeDeorbited() {
-    Sat* currentNode = m_root;
-    while (currentNode != nullptr) {
-        if (currentNode->getLeft() == nullptr) {
-            if (currentNode->getState() == DEORBITED) {
-				remove(currentNode->getID());
+    Sat* currNode = m_root;
+    while (currNode != nullptr) {
+        if (currNode->getLeft() == nullptr) {
+            if (currNode->getState() == DEORBITED) {
+				remove(currNode->getID());
 			}
-			currentNode = currentNode->getRight();
+			currNode = currNode->getRight();
 		}
         else {
-			Sat* prevNode = currentNode->getLeft();
-            while (prevNode->getRight() != nullptr && prevNode->getRight() != currentNode) {
+			Sat* prevNode = currNode->getLeft();
+            while (prevNode->getRight() != nullptr and prevNode->getRight() != currNode) {
 				prevNode = prevNode->getRight();
 			}
 
             if (prevNode->getRight() == nullptr) {
-				prevNode->setRight(currentNode);
-				currentNode = currentNode->getLeft();
+				prevNode->setRight(currNode);
+				currNode = currNode->getLeft();
 			}
             else {
 				prevNode->setRight(nullptr);
 
-                if (currentNode->getState() == DEORBITED) {
-					remove(currentNode->getID());
+                if (currNode->getState() == DEORBITED) {
+					remove(currNode->getID());
 				}
 
-				currentNode = currentNode->getRight();
+				currNode = currNode->getRight();
 			}
 		}
 	}
@@ -111,9 +118,43 @@ bool SatNet::findSatellite(int id) const {
     return findSatellite(id, m_root);
 }
 
+//copy constructor
+//copies the given SatNet into a new SatNet
 const SatNet& SatNet::operator=(const SatNet& rhs) {
-    SatNet temp(rhs);
-    return temp;
+    if (this != &rhs) {
+		clear();
+		Sat* currNode = rhs.m_root;
+        while (currNode != nullptr) {
+            if (currNode->getLeft() == nullptr) {
+				Sat satellite(currNode->getID(), currNode->getAlt(), currNode->getInclin());
+				insert(satellite);
+				currNode = currNode->getRight();
+			}
+            else {
+				Sat* prevNode = currNode->getLeft();
+                //find the rightmost node in the left subtree
+                while (prevNode->getRight() != nullptr and prevNode->getRight() != currNode) {
+					prevNode = prevNode->getRight();
+				}
+                //if the rightmost node is null, set it to the current node
+                if (prevNode->getRight() == nullptr) {
+					prevNode->setRight(currNode);
+					currNode = currNode->getLeft();
+				}
+                //if the rightmost node is the current node, set it to null
+                //and insert the current node into the new tree
+                else {
+					prevNode->setRight(nullptr);
+                    //insert the current node into the new tree
+					Sat satellite(currNode->getID(), currNode->getAlt(), currNode->getInclin());
+					insert(satellite);
+
+					currNode = currNode->getRight();
+				}
+			}
+		}
+	}   
+	return *this;
 }
 
 //countrs the number of satellites with the given inclination
@@ -139,15 +180,20 @@ int SatNet::countSatellites(INCLIN degree, Sat* satNode) const {
     }
 }
 
+//finds the satellite with the given id
 bool SatNet::findSatellite(int id, Sat* aNode) const {
-	if (aNode == nullptr)
-		return false;
-	else if (aNode->getID() == id)
-		return true;
-	else if (aNode->getID() > id)
-		return findSatellite(id, aNode->m_left);
-	else
-		return findSatellite(id, aNode->m_right);
+    if (aNode == nullptr) {
+        return false;
+    }
+    else if (aNode->getID() == id) {
+        return true;
+    }
+    else if (aNode->getID() > id) {
+        return findSatellite(id, aNode->m_left);
+    }
+    else {
+        return findSatellite(id, aNode->m_right);
+    }
 }
 
 void SatNet::clear(Sat* satNode) {
@@ -163,7 +209,7 @@ void SatNet::clear(Sat* satNode) {
 }
 
 Sat* SatNet::find(Sat* aNode, const int& element) {
-    if (aNode == nullptr || aNode->getID() == element)
+    if (aNode == nullptr or aNode->getID() == element)
         return aNode;
     else if (aNode->getID() > element)
         return find(aNode->m_left, element);
@@ -243,20 +289,15 @@ int SatNet::checkBal(Sat* satNode) {
 
 Sat* SatNet::remove(Sat* satNode, const int& element) {
     Sat* temp;
-    if (satNode == nullptr)// item not found; do nothing
+    if (satNode == nullptr)
         return nullptr;
-    // continue to traverse until we find the element
-    else if (element < satNode->getID())//traverse to left
+    else if (element < satNode->getID())
         satNode->m_left = remove(satNode->m_left, element);
-    else if (element > satNode->getID())//traverse to right
+    else if (element > satNode->getID())
         satNode->m_right = remove(satNode->m_right, element);
-    // the case of the node with two children
-    else if (satNode->m_left && satNode->m_right) {
-        // find right’s lowest value
+    else if (satNode->m_left and satNode->m_right) {
         temp = findMin(satNode->m_right);
-        // copy its value to the node that we want to delete
         satNode->m_id = temp->getID();
-        // now delete the found node
         satNode->m_right = remove(satNode->m_right, satNode->m_id);
     }
     else {
@@ -275,7 +316,7 @@ Sat* SatNet::remove(Sat* satNode, const int& element) {
 //finds the maximum value in the tree
 Sat* SatNet::findMax(Sat* satNode) {
     //if satnode is null or satnode's right child is null
-    if (satNode == nullptr || satNode->m_right == nullptr)
+    if (satNode == nullptr or satNode->m_right == nullptr)
         return satNode;
     else {
         //returns the right child of the node
@@ -286,7 +327,7 @@ Sat* SatNet::findMax(Sat* satNode) {
 //finds the minimum value in the tree
 Sat* SatNet::findMin(Sat* satNode) {
     //if satnode is null or satnode's left child is null
-	if (satNode == nullptr || satNode->m_left == nullptr)
+	if (satNode == nullptr or satNode->m_left == nullptr)
 		return satNode;
     else {
         //returns the left child of the node
