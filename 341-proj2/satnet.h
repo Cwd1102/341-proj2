@@ -118,6 +118,7 @@ private:
     // Any private helper functions must be delared here!
     // ***************************************************
     //int returnHeight(const Sat& satellite, Sat& current, int height);
+    bool findSatellite(int id , Sat* aNode) const;
     Sat* findMin(Sat* satNode);
     Sat* findMax(Sat* satNode);
     Sat* insert(const Sat& sat, Sat*& Node);
@@ -127,6 +128,8 @@ private:
     Sat* rightRot(Sat* satNode);
     int checkBal(Sat* satNode);
     Sat* remove(Sat* satNode, const int& id);
+    Sat* find(Sat* aNode, const int& element);
     void clear(Sat* satNode);
+    int countSatellites(INCLIN degree, Sat* satNode) const;
 };
 #endif

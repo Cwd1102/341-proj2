@@ -40,7 +40,6 @@ void SatNet::listSatellites() const {
     while (currentNode != nullptr) {
         if (currentNode->getLeft() == nullptr) {
             cout << currentNode->getID() << ": " << currentNode->getStateStr() << ": " << currentNode->getInclinStr() << ": " << currentNode->getAltStr() << endl;
-
             currentNode = currentNode->getRight();
         }
         else {
@@ -65,15 +64,51 @@ void SatNet::listSatellites() const {
 }
 
 bool SatNet::setState(int id, STATE state) {
-    return false;
+    Sat* satNode = find(m_root, id);
+
+    if (satNode != nullptr) {
+        satNode->setState(state);
+        return true;
+    }
+    else {
+    	return false;
+    }
 }
 
 void SatNet::removeDeorbited() {
+    Sat* currentNode = m_root;
+    while (currentNode != nullptr) {
+        if (currentNode->getLeft() == nullptr) {
+            if (currentNode->getState() == DEORBITED) {
+				remove(currentNode->getID());
+			}
+			currentNode = currentNode->getRight();
+		}
+        else {
+			Sat* prevNode = currentNode->getLeft();
+            while (prevNode->getRight() != nullptr && prevNode->getRight() != currentNode) {
+				prevNode = prevNode->getRight();
+			}
 
+            if (prevNode->getRight() == nullptr) {
+				prevNode->setRight(currentNode);
+				currentNode = currentNode->getLeft();
+			}
+            else {
+				prevNode->setRight(nullptr);
+
+                if (currentNode->getState() == DEORBITED) {
+					remove(currentNode->getID());
+				}
+
+				currentNode = currentNode->getRight();
+			}
+		}
+	}
 }
 
 bool SatNet::findSatellite(int id) const {
-    return false;
+    return findSatellite(id, m_root);
 }
 
 const SatNet& SatNet::operator=(const SatNet& rhs) {
@@ -81,13 +116,39 @@ const SatNet& SatNet::operator=(const SatNet& rhs) {
     return temp;
 }
 
+//countrs the number of satellites with the given inclination
+//recursive function
+//adds one for each node with the given inclination
 int SatNet::countSatellites(INCLIN degree) const {
-    return 0;
+    return countSatellites(degree, m_root);
 }
 
 
 // ***************************************************
-//Helper functions
+// Helper functions
+// ***************************************************
+int SatNet::countSatellites(INCLIN degree, Sat* satNode) const {
+    if (satNode == nullptr) {
+        return 0;
+    }
+    else if (satNode->getInclin() == degree) {
+        return 1 + countSatellites(degree, satNode->m_left) + countSatellites(degree, satNode->m_right);
+    }
+    else {
+        return countSatellites(degree, satNode->m_left) + countSatellites(degree, satNode->m_right);
+    }
+}
+
+bool SatNet::findSatellite(int id, Sat* aNode) const {
+	if (aNode == nullptr)
+		return false;
+	else if (aNode->getID() == id)
+		return true;
+	else if (aNode->getID() > id)
+		return findSatellite(id, aNode->m_left);
+	else
+		return findSatellite(id, aNode->m_right);
+}
 
 void SatNet::clear(Sat* satNode) {
     //This works on any subtree
@@ -100,6 +161,16 @@ void SatNet::clear(Sat* satNode) {
         delete satNode;//then delete the node itself
     }
 }
+
+Sat* SatNet::find(Sat* aNode, const int& element) {
+    if (aNode == nullptr || aNode->getID() == element)
+        return aNode;
+    else if (aNode->getID() > element)
+        return find(aNode->m_left, element);
+    else  
+        return find(aNode->m_right, element);
+}
+
 Sat* SatNet::insert(const Sat& element, Sat*& satNode) {
     if (satNode == nullptr) {
         Sat* satNode = new Sat(element);
@@ -188,9 +259,7 @@ Sat* SatNet::remove(Sat* satNode, const int& element) {
         // now delete the found node
         satNode->m_right = remove(satNode->m_right, satNode->m_id);
     }
-    else {// the case of zero or one child
-        // also, in the case of two children, after finding right’s lowest 
-        // value we end up here by calling remove function recursively
+    else {
         temp = satNode;
         if (satNode->m_left == nullptr)
             satNode = satNode->m_right;
@@ -225,11 +294,19 @@ Sat* SatNet::findMin(Sat* satNode) {
 	}
 }
 
-
-
 void SatNet::updateHeight(Sat* satNode) {
-    if (satNode == nullptr) return;
-    int leftHeight = (satNode->m_left == nullptr ? -1 : satNode->m_left->m_height);
-    int rightHeight = (satNode->m_right == nullptr ? -1 : satNode->m_right->m_height);
-    satNode->m_height = 1 + (leftHeight > rightHeight ? leftHeight : rightHeight);
+    int leftHeight = -1;
+    int rightHeight = -1;
+
+    if (satNode == nullptr) {
+        return;
+    }
+    if (satNode->m_left != nullptr) {
+        leftHeight = satNode->m_left->m_height;
+    }
+    if (satNode->m_right != nullptr) {
+        rightHeight = satNode->m_right->m_height;
+    }
+    satNode->m_height = max(leftHeight, rightHeight) + 1;
 }
+

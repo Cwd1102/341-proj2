@@ -108,6 +108,9 @@ private:
 class Tester {
 public:
     double sampleTimeMeasurement(SatNet& aNet, int tempArray[], int arraySize);
+    bool testFind(SatNet& aNet, int tempArray[], int arraySize);
+    
+private:
 };
 int main() {
     Tester tester;
@@ -154,7 +157,10 @@ int main() {
     }
     cout << endl << "Calling Tester::sampleTimeMeasurement(...): " << endl;
     cout << "\tFinding 1000 nodes takes " << tester.sampleTimeMeasurement(network1, tempIDs, size) << " seconds." << endl;
-
+    cout << "Calling Tester::testDeorbit(...): " << endl;
+    if (tester.testFind(network1, tempIDs, size) == 0) {
+        cout << "Test Deorbit Failed" << endl;
+    }
     return 0;
 }
 
@@ -164,10 +170,22 @@ double Tester::sampleTimeMeasurement(SatNet& aNet, int tempArray[], int arraySiz
     start = clock();
     // the algorithm to be measured
     for (int j = 0; j < arraySize; j++) {
-        aNet.findSatellite(tempArray[j]);
+        //cout << aNet.findSatellite(tempArray[j]) << endl;
     }
     stop = clock();
     T = stop - start;//number of clock ticks the algorithm took
     double measureTime = T / CLOCKS_PER_SEC;//time in seconds
     return measureTime;
+}
+
+bool Tester::testFind(SatNet& aNet, int tempArray[], int arraySize) {
+	bool result = true;
+    for (int j = 0; j < arraySize; j++) {
+        if (!aNet.findSatellite(tempArray[j])) {
+            cout << "Deorbit failed at " << j << endl;
+			result = false;
+			break;
+		}
+	}
+	return result;
 }
