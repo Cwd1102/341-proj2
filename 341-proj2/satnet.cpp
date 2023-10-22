@@ -237,10 +237,12 @@ Sat* SatNet::insert(const Sat& element, Sat*& satNode) {
 }
 
 Sat* SatNet::reBal(Sat* satNode) {
-    if ((checkBal(satNode) < -1) and (checkBal(satNode->m_right) <= 0))
+    if ((checkBal(satNode) < -1) and (checkBal(satNode->m_right) <= 0)) {
         return leftRot(satNode);
-    else if ((checkBal(satNode) > 1) and (checkBal(satNode->m_left) >= 0))
+    }
+    else if ((checkBal(satNode) > 1) and (checkBal(satNode->m_left) >= 0)) {
         return rightRot(satNode);
+    }
     else if ((checkBal(satNode) < -1) and (checkBal(satNode->m_right) >= 0)) {
         satNode->m_right = rightRot(satNode->m_right);
         return leftRot(satNode);

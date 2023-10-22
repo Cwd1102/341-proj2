@@ -114,6 +114,8 @@ public:
     bool removeNormal();
     bool removeEdge();
     bool removeError();
+    bool checkInsertBal();
+    bool checkRemoveBal();
 private:
 };
 
@@ -167,6 +169,21 @@ int main() {
     else {
 				cout << "removeError" << FAIL << endl;
 	}
+    cout << "Testing checkInsertBal" << endl;
+    if (myTester.checkInsertBal()) {
+				cout << "checkInsertBal" << PASS << endl;
+	}
+    else {
+				cout << "checkInsertBal" << FAIL << endl;
+	}
+
+	cout << "Testing checkRemoveBal" << endl;
+    if (myTester.checkRemoveBal()) {
+				cout << "checkRemoveBal" << PASS << endl;
+	}
+    else {
+				cout << "checkRemoveBal" << FAIL << endl;
+	}
 
 	return 0;
 
@@ -184,9 +201,7 @@ bool Tester::insertNormal() {
     for (int i = 0; i < teamSize; i++) {
         ID = idGen.getRandNum();
         tempArray[i] = ID;
-        Sat satellite(ID,
-            static_cast<ALT>(altGen.getRandNum()),
-            static_cast<INCLIN>(inclinGen.getRandNum()));
+        Sat satellite(ID,static_cast<ALT>(altGen.getRandNum()),static_cast<INCLIN>(inclinGen.getRandNum()));
         network.insert(satellite);
     }
     for (int i = 0; i < teamSize; i++) {
@@ -210,9 +225,7 @@ bool Tester::insertEdge() {
     for (int i = 0; i < teamSize; i++) {
         ID = idGen.getRandNum();
         tempArray[i] = ID;
-        Sat satellite(ID,
-            static_cast<ALT>(altGen.getRandNum()),
-            static_cast<INCLIN>(inclinGen.getRandNum()));
+        Sat satellite(ID,static_cast<ALT>(altGen.getRandNum()),static_cast<INCLIN>(inclinGen.getRandNum()));
         network.insert(satellite);
     }
     if (network.findSatellite(tempArray[99]) == false) {
@@ -235,9 +248,7 @@ bool Tester::interstError() {
     for (int i = 0; i < teamSize; i++) {
         ID = idGen.getRandNum();
         tempArray[i] = ID;
-        Sat satellite(ID,
-            static_cast<ALT>(altGen.getRandNum()),
-            static_cast<INCLIN>(inclinGen.getRandNum()));
+        Sat satellite(ID,static_cast<ALT>(altGen.getRandNum()),static_cast<INCLIN>(inclinGen.getRandNum()));
         network.insert(satellite);
     }
     network.insert(tempSat);
@@ -260,9 +271,7 @@ bool Tester::removeNormal() {
     for (int i = 0; i < teamSize; i++) {
 		ID = idGen.getRandNum();
 		tempArray[i] = ID;
-		Sat satellite(ID,
-            			static_cast<ALT>(altGen.getRandNum()),
-            			static_cast<INCLIN>(inclinGen.getRandNum()));
+		Sat satellite(ID,static_cast<ALT>(altGen.getRandNum()),static_cast<INCLIN>(inclinGen.getRandNum()));
 		network.insert(satellite);
 	}
     for (int i = 0; i < teamSize; i++) {
@@ -324,6 +333,56 @@ bool Tester::removeError() {
 		return false;
 	}
 
+	return true;
+}
+
+bool Tester::checkInsertBal() {
+	Random idGen(MINID, MAXID);
+	Random inclinGen(0, 3);  // there are 4 inclination
+	Random altGen(0, 3);     // there are 4 altitudes
+	SatNet network;
+	int bal = 0;
+
+	int teamSize = 100;
+	int tempArray[100]{};
+	int ID = 0;
+    for (int i = 0; i < teamSize; i++) {
+		ID = idGen.getRandNum();
+		tempArray[i] = ID;
+		Sat satellite(ID, static_cast<ALT>(altGen.getRandNum()),static_cast<INCLIN>(inclinGen.getRandNum()));
+		network.insert(satellite);
+        bal = network.checkBal(network.m_root);
+        if (bal > 1 || bal < -1) {
+            return false;
+        }
+	}
+
+	return true;
+}
+
+bool Tester::checkRemoveBal() {
+	Random idGen(MINID, MAXID);
+	Random inclinGen(0, 3);  // there are 4 inclination
+	Random altGen(0, 3);     // there are 4 altitudes
+	SatNet network;
+	int bal = 0;
+
+	int teamSize = 100;
+	int tempArray[100]{};
+	int ID = 0;
+    for (int i = 0; i < teamSize; i++) {
+		ID = idGen.getRandNum();
+		tempArray[i] = ID;
+		Sat satellite(ID, static_cast<ALT>(altGen.getRandNum()),static_cast<INCLIN>(inclinGen.getRandNum()));
+		network.insert(satellite);
+	}
+    for (int i = 0; i < teamSize; i++) {
+		network.remove(tempArray[i]);
+		bal = network.checkBal(network.m_root);
+        if (bal > 1 || bal < -1) {
+			return false;
+		}
+	}
 
 	return true;
 }
