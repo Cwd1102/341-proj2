@@ -131,6 +131,7 @@ private:
     Sat* find(Sat* aNode, const int& element);
     void clear(Sat* satNode);
     int countSatellites(INCLIN degree, Sat* satNode) const;
+    void removeDeorbited(Sat* satNode);
 
 };
 #endif

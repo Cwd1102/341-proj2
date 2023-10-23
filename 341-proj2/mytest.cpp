@@ -119,6 +119,11 @@ public:
     bool checkDeorbited();
     bool checkDeorbitedEdge();
     bool checkDeorbitError();
+    bool testsHeight();
+    bool testCountSat();
+    bool testAssignment();
+    bool testInsertComplexity();
+    bool testRemoveComplexity();
 
 private:
 };
@@ -203,6 +208,46 @@ int main() {
 	}
     else {
 				cout << "checkDeorbitedEdge" << FAIL << endl;
+	}
+
+    cout << "Testing checkDeorbitError" << endl;
+    if (myTester.checkDeorbitError()) {
+				cout << "checkDeorbitError" << PASS << endl;
+	}
+    else {
+				cout << "checkDeorbitError" << FAIL << endl;
+	}
+
+    cout << "Testing testsHeight" << endl;
+    if (myTester.testsHeight()) {
+				cout << "testsHeight" << PASS << endl;
+	}
+    else {
+				cout << "testsHeight" << FAIL << endl;
+	}
+
+	cout << "Testing testCountSat" << endl;
+    if (myTester.testCountSat()) {
+				cout << "testCountSat" << PASS << endl;
+	}
+    else {
+				cout << "testCountSat" << FAIL << endl;
+	}
+
+    cout << "Testing testAssignment" << endl;
+    if (myTester.testAssignment()) {
+				cout << "testAssignment" << PASS << endl;
+	}
+    else {
+				cout << "testAssignment" << FAIL << endl;
+	}
+
+    cout << "Testing testInsertComplexity" << endl;
+    if (myTester.testInsertComplexity()) {
+				cout << "testInsertComplexity" << PASS << endl;
+	}
+    else {
+				cout << "testInsertComplexity" << FAIL << endl;
 	}
 
 	return 0;
@@ -413,8 +458,8 @@ bool Tester::checkDeorbited() {
 	SatNet network;
 	int bal = 0;
     int j = 0;
-	int teamSize = 100;
-	int tempArray[100]{};
+	int teamSize = 10000;
+	int tempArray[10000]{};
     int idList[30]{};
 	int ID = 0;
     for (int i = 0; i < teamSize; i++) {
@@ -431,8 +476,8 @@ bool Tester::checkDeorbited() {
     }
 
     network.removeDeorbited();
-    for (int i = 0; i < teamSize; i++) {
-        if (network.findSatellite(tempArray[i]) == true) {
+    for (int i = 0; i < 30; i++) {
+        if (network.findSatellite(idList[i]) == true) {
 			return false;
 		}
 	}
@@ -469,5 +514,170 @@ bool Tester::checkDeorbitedEdge() {
             return false;
         }
     }
+	return true;
+}
+
+bool Tester::checkDeorbitError() {
+	Random idGen(MINID, MAXID);
+	Random inclinGen(0, 3);  // there are 4 inclination
+	Random altGen(0, 3);     // there are 4 altitudes
+	SatNet network;
+	int bal = 0;
+	int j = 0;
+	int teamSize = 100;
+	int tempArray[100]{};
+	int idList[30]{};
+	int ID = 0;
+
+    for (int i = 0; i < teamSize; i++) {
+		ID = idGen.getRandNum();
+		tempArray[i] = ID;
+		Sat satellite(ID, static_cast<ALT>(altGen.getRandNum()), static_cast<INCLIN>(inclinGen.getRandNum()));
+		network.insert(satellite);
+	}
+
+    for (int i = 30; i < 50; i++) {
+		network.setState(tempArray[i], DEORBITED);
+		idList[j] = tempArray[i];
+		j++;
+	}
+
+	network.removeDeorbited();
+    for (int i = 0; i < 30; i++) {
+        if (network.findSatellite(idList[i]) == true) {
+			return false;
+		}
+	}
+	return true;
+}
+
+bool Tester::testsHeight() {
+	Random idGen(MINID, MAXID);
+	Random inclinGen(0, 3);  // there are 4 inclination
+	Random altGen(0, 3);     // there are 4 altitudes
+	SatNet network;
+	int teamSize = 100;
+	int tempArray[100]{};
+	int ID = 0;
+
+    for (int i = 0; i < teamSize; i++) {
+        ID = idGen.getRandNum();
+        tempArray[i] = ID;
+		Sat satellite(ID, static_cast<ALT>(altGen.getRandNum()), static_cast<INCLIN>(inclinGen.getRandNum()));
+		network.insert(satellite);
+        if ((network.checkBal(network.m_root) < -1) or (network.checkBal(network.m_root) > 1)) {
+            return false;
+        }
+	}
+	return true;
+}
+
+bool Tester::testCountSat() {
+	Random idGen(MINID, MAXID);
+	Random inclinGen(0, 3);  // there are 4 inclination
+	Random altGen(0, 3);     // there are 4 altitudes
+	SatNet network;
+	int teamSize = 100;
+	int tempArray[100]{};
+	int ID = 0;
+	int count = 0;
+	int inclin = 0;
+
+    for (int i = 0; i < teamSize; i++) {
+        ID = idGen.getRandNum();
+        tempArray[i] = ID;
+		Sat satellite(ID, static_cast<ALT>(altGen.getRandNum()), static_cast<INCLIN>(inclinGen.getRandNum()));
+		network.insert(satellite);
+        if (satellite.m_inclin == 1) {
+			inclin++;
+		}
+	}
+	count = network.countSatellites(static_cast<INCLIN>(1));
+    if (inclin != count) {
+		return false;
+	}
+	return true;
+}
+
+bool Tester::testAssignment() {
+	Random idGen(MINID, MAXID);
+	Random inclinGen(0, 3);  // there are 4 inclination
+	Random altGen(0, 3);     // there are 4 altitudes
+	SatNet network;
+	SatNet network1;
+	int teamSize = 100;
+	int tempArray[100]{};
+	int ID = 0;
+	int count = 0;
+	int inclin = 0;
+
+    for (int i = 0; i < teamSize; i++) {
+		ID = idGen.getRandNum();
+		tempArray[i] = ID;
+		Sat satellite(ID, static_cast<ALT>(altGen.getRandNum()), static_cast<INCLIN>(inclinGen.getRandNum()));
+		network.insert(satellite);
+	}
+	network1 = network;
+    for (int i = 0; i < teamSize; i++) {
+        if (network.findSatellite(tempArray[i]) != network1.findSatellite(tempArray[i])) {
+			return false;
+		}
+	}
+	return true;
+}
+
+bool Tester::testInsertComplexity() {
+	Random idGen(MINID, MAXID);
+	Random inclinGen(0, 3);  // there are 4 inclination
+	Random altGen(0, 3);     // there are 4 altitudes
+	SatNet network;
+	int teamSize1 = 10000;
+    int teamSize2 = 20000;
+	int tempArray[10000]{};
+    int tempArray2[20000]{};
+	int ID = 0;
+    double start = 0;
+    double stop = 0;
+    double T1 = 0;
+    double T2 = 0;
+    double realRatio = 0;
+    int constant = teamSize2 / teamSize1;
+    double expectedRatio = ((teamSize1 * constant) * log(teamSize1 * constant)) / (teamSize1 *log(teamSize1));
+    
+    start = clock();
+    for (int i = 0; i < teamSize1; i++) {
+		ID = idGen.getRandNum();
+		tempArray[i] = ID;
+		Sat satellite(ID, static_cast<ALT>(altGen.getRandNum()), static_cast<INCLIN>(inclinGen.getRandNum()));
+        network.insert(satellite);
+
+
+	}
+    stop = clock();
+    T1 = (stop - start) / CLOCKS_PER_SEC;
+    start = 0;
+    stop = 0;
+    start = clock();
+
+    for (int i = 0; i < teamSize2; i++) {
+        ID = idGen.getRandNum();
+        tempArray2[i] = ID;
+        Sat satellite(ID, static_cast<ALT>(altGen.getRandNum()), static_cast<INCLIN>(inclinGen.getRandNum()));
+        network.insert(satellite);
+
+
+    }
+    stop = clock();
+
+    T2 = (stop - start) / CLOCKS_PER_SEC;
+
+    realRatio = T2 / T1;
+    cout << "Expected Ratio: " << expectedRatio << endl;
+    cout << "Real Ratio: " << realRatio << endl;
+
+    if (((realRatio) < expectedRatio - .4) or (realRatio > expectedRatio + .4)) {
+        return false;
+    }
+
 	return true;
 }

@@ -83,35 +83,10 @@ bool SatNet::setState(int id, STATE state) {
 }
 
 void SatNet::removeDeorbited() {
-    Sat* currNode = m_root;
-    while (currNode != nullptr) {
-        if (currNode->getLeft() == nullptr) {
-            if (currNode->getState() == DEORBITED) {
-				remove(currNode->getID());
-			}
-			currNode = currNode->getRight();
-		}
-        else {
-			Sat* prevNode = currNode->getLeft();
-            while (prevNode->getRight() != nullptr and prevNode->getRight() != currNode) {
-				prevNode = prevNode->getRight();
-			}
-
-            if (prevNode->getRight() == nullptr) {
-				prevNode->setRight(currNode);
-				currNode = currNode->getLeft();
-			}
-            else {
-				prevNode->setRight(nullptr);
-
-                if (currNode->getState() == DEORBITED) {
-					remove(currNode->getID());
-				}
-
-				currNode = currNode->getRight();
-			}
-		}
-	}
+    int height = m_root->getHeight();
+    for (int i = 0; i < height; i++) {
+        removeDeorbited(m_root);
+    }
 }
 
 bool SatNet::findSatellite(int id) const {
@@ -168,6 +143,23 @@ int SatNet::countSatellites(INCLIN degree) const {
 // ***************************************************
 // Helper functions
 // ***************************************************
+
+//removes all deorbited satellites from the tree
+//recursive function
+
+void SatNet::removeDeorbited(Sat* satNode) {
+    if (satNode == nullptr) {
+		return;
+	}
+    else {
+		removeDeorbited(satNode->m_left);
+		removeDeorbited(satNode->m_right);
+        if (satNode->getState() == DEORBITED) {
+			remove(satNode->getID());
+		}
+	}
+}
+
 int SatNet::countSatellites(INCLIN degree, Sat* satNode) const {
     if (satNode == nullptr) {
         return 0;
@@ -209,12 +201,15 @@ void SatNet::clear(Sat* satNode) {
 }
 
 Sat* SatNet::find(Sat* aNode, const int& element) {
-    if (aNode == nullptr or aNode->getID() == element)
+    if (aNode == nullptr or aNode->getID() == element) {
         return aNode;
-    else if (aNode->getID() > element)
+    }
+    else if (aNode->getID() > element) {
         return find(aNode->m_left, element);
-    else  
+    }
+    else {
         return find(aNode->m_right, element);
+    }
 }
 
 Sat* SatNet::insert(const Sat& element, Sat*& satNode) {
