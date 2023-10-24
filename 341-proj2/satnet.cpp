@@ -42,6 +42,7 @@ void SatNet::dump(Sat* satellite) const {
     }
 }
 
+//returns the height of the tree
 void SatNet::listSatellites() const {
     Sat* currNode = m_root;
     while (currNode != nullptr) {
@@ -108,7 +109,7 @@ const SatNet& SatNet::operator=(const SatNet& rhs) {
             else {
 				Sat* prevNode = currNode->getLeft();
                 //find the rightmost node in the left subtree
-                while (prevNode->getRight() != nullptr and prevNode->getRight() != currNode) {
+                while ((prevNode->getRight() != nullptr) and (prevNode->getRight() != currNode)) {
 					prevNode = prevNode->getRight();
 				}
                 //if the rightmost node is null, set it to the current node
@@ -139,14 +140,12 @@ int SatNet::countSatellites(INCLIN degree) const {
     return countSatellites(degree, m_root);
 }
 
-
 // ***************************************************
 // Helper functions
 // ***************************************************
 
 //removes all deorbited satellites from the tree
 //recursive function
-
 void SatNet::removeDeorbited(Sat* satNode) {
     if (satNode == nullptr) {
 		return;
@@ -160,10 +159,16 @@ void SatNet::removeDeorbited(Sat* satNode) {
 	}
 }
 
+//counts the number of satellites with the given inclination
 int SatNet::countSatellites(INCLIN degree, Sat* satNode) const {
+    //if the node is null
     if (satNode == nullptr) {
         return 0;
     }
+    //if the node's inclination is greater than the given inclination
+    else if (satNode->getInclin() > degree) {
+		return countSatellites(degree, satNode->m_left) + countSatellites(degree, satNode->m_right);
+	}
     else if (satNode->getInclin() == degree) {
         return 1 + countSatellites(degree, satNode->m_left) + countSatellites(degree, satNode->m_right);
     }
@@ -174,15 +179,19 @@ int SatNet::countSatellites(INCLIN degree, Sat* satNode) const {
 
 //finds the satellite with the given id
 bool SatNet::findSatellite(int id, Sat* aNode) const {
+    //if the node is null
     if (aNode == nullptr) {
         return false;
     }
+    //if the node's id is equal to the given id
     else if (aNode->getID() == id) {
         return true;
     }
+    //if the node's id is greater than the given id
     else if (aNode->getID() > id) {
         return findSatellite(id, aNode->m_left);
     }
+    //if the node's id is less than the given id
     else {
         return findSatellite(id, aNode->m_right);
     }
@@ -190,58 +199,77 @@ bool SatNet::findSatellite(int id, Sat* aNode) const {
 
 void SatNet::clear(Sat* satNode) {
     //This works on any subtree
-    if (satNode == nullptr) {//there is no pointer to delete
+    if (satNode == nullptr) {
         return;
     }
     else {
-        clear(satNode->m_left);//first delete the left child
-        clear(satNode->m_right);//then delete the right child
-        delete satNode;//then delete the node itself
+        //clear the left and right subtrees
+        clear(satNode->m_left);
+        clear(satNode->m_right);
+        delete satNode;
     }
 }
 
-Sat* SatNet::find(Sat* aNode, const int& element) {
-    if (aNode == nullptr or aNode->getID() == element) {
+Sat* SatNet::find(Sat* aNode, const int& ID) {
+    //if the node is null or the node's id is the ID
+    if ((aNode == nullptr) or (aNode->getID() == ID)) {
         return aNode;
     }
-    else if (aNode->getID() > element) {
-        return find(aNode->m_left, element);
+    //if the node's id is greater than the ID
+    else if (aNode->getID() > ID) {
+        return find(aNode->m_left, ID);
+    }
+    //if the node's id is less than the ID
+    else {
+        return find(aNode->m_right, ID);
+    }
+}
+
+//inserts the given satellite into the tree
+Sat* SatNet::insert(const Sat& ID, Sat*& satNode) {
+    //if the node is null
+    if (satNode == nullptr) {
+        //create a new node
+        satNode = new Sat(ID);
+        return satNode;
+    }
+    //if the node's id is greater than the ID
+    else if (satNode->getID() > ID.getID()) {
+        //insert the ID into the left subtree
+        Sat* leftNode = insert(ID, satNode->m_left);
+        satNode->m_left = leftNode;
+        updateHeight(satNode);
+        return reBal(satNode);
+    }
+    //if the node's id is less than the ID
+    else if (satNode->getID() < ID.getID()) {
+        //insert the ID into the right subtree
+        Sat* rightNode = insert(ID, satNode->m_right);
+        satNode->m_right = rightNode;
+        updateHeight(satNode);
+        return reBal(satNode);
     }
     else {
-        return find(aNode->m_right, element);
+        return satNode;
     }
 }
 
-Sat* SatNet::insert(const Sat& element, Sat*& satNode) {
-    if (satNode == nullptr) {
-        Sat* satNode = new Sat(element);
-        return satNode;
-    }
-    else if (satNode->getID() > element.getID()) {
-        satNode->m_left = insert(element, satNode->m_left);
-        updateHeight(satNode);
-        return reBal(satNode);
-    }
-    else if (satNode->getID() < element.getID()) {
-        satNode->m_right = insert(element, satNode->m_right);
-        updateHeight(satNode);
-        return reBal(satNode);
-    }
-    else
-        return satNode;
-}
-
+//rebalances the tree
 Sat* SatNet::reBal(Sat* satNode) {
+    //if the balance is less than -1 and the balance of the right child is greater than or equal to 0
     if ((checkBal(satNode) < -1) and (checkBal(satNode->m_right) <= 0)) {
         return leftRot(satNode);
     }
-    else if ((checkBal(satNode) > 1) and (checkBal(satNode->m_left) >= 0)) {
-        return rightRot(satNode);
-    }
+    //if the balance is greater than 1 and the balance of the left child is greater than or equal to 0
     else if ((checkBal(satNode) < -1) and (checkBal(satNode->m_right) >= 0)) {
         satNode->m_right = rightRot(satNode->m_right);
         return leftRot(satNode);
     }
+    //if the balance is less than -1 and the balance of the right child is less than or equal to 0
+    else if ((checkBal(satNode) > 1) and (checkBal(satNode->m_left) >= 0)) {
+        return rightRot(satNode);
+    }
+    //if the balance is greater than 1 and the balance of the left child is less than or equal to 0
     else if ((checkBal(satNode) > 1) and (checkBal(satNode->m_left) <= 0)) {
         satNode->m_left = leftRot(satNode->m_left);
         return rightRot(satNode);
@@ -251,32 +279,40 @@ Sat* SatNet::reBal(Sat* satNode) {
     }
 }
 
+//rotates the tree to the left
 Sat* SatNet::leftRot(Sat* satNode) {
     Sat* curr = satNode;
     Sat* next = curr->m_right;
     curr->m_right = next->m_left;
     next->m_left = curr;
+    //update the height of the nodes
     updateHeight(curr);
     updateHeight(next);
     return next;
 }
 
+//rotates the tree to the right
 Sat* SatNet::rightRot(Sat* satNode) {
     Sat* curr = satNode;
     Sat* next = curr->m_left;
     curr->m_left = next->m_right;
     next->m_right = curr;
+    //update the height of the nodes
     updateHeight(curr);
     updateHeight(next);
     return next;
 }
 
+//checks the balance of the tree
 int SatNet::checkBal(Sat* satNode) {
     if (satNode == nullptr)
         return -1;
     else {
+        //the balance is the height of the left subtree minus the height of the right subtree
+        //find the height of the left and right subtrees
         int leftHeight = -1;
         int rightHeight = -1;
+        //if the left and right subtrees are not null
         if (satNode->m_left != nullptr)
             leftHeight = satNode->m_left->m_height;
         if (satNode->m_right != nullptr)
@@ -285,30 +321,40 @@ int SatNet::checkBal(Sat* satNode) {
     }
 }
 
-Sat* SatNet::remove(Sat* satNode, const int& element) {
-    Sat* temp;
+//removes the given satellite from the tree
+Sat* SatNet::remove(Sat* satNode, const int& ID) {
+    //if the node is null
     if (satNode == nullptr) {
         return nullptr;
     }
-    else if (element < satNode->getID()) {
-        satNode->m_left = remove(satNode->m_left, element);
+    //if the node's id is greater than the ID
+    if (ID < satNode->getID()) {
+        satNode->m_left = remove(satNode->m_left, ID);
     }
-    else if (element > satNode->getID()) {
-        satNode->m_right = remove(satNode->m_right, element);
+    //if the node's id is less than the ID
+    else if (ID > satNode->getID()) {
+        satNode->m_right = remove(satNode->m_right, ID);
     }
-    else if (satNode->m_left and satNode->m_right) {
-        temp = findMin(satNode->m_right);
-        satNode->m_id = temp->getID();
-        satNode->m_right = remove(satNode->m_right, satNode->m_id);
-    }
+    //if the node's id is equal to the ID
     else {
-        temp = satNode;
-        if (satNode->m_left == nullptr)
-            satNode = satNode->m_right;
-        else if (satNode->m_right == nullptr)
-            satNode = satNode->m_left;
-        delete temp;
+        //if the node has no children
+        if (satNode->m_left == nullptr) {
+            Sat* temp = satNode->m_right;
+            delete satNode;
+            return temp;
+        }
+        //if the node has one child
+        else if (satNode->m_right == nullptr) {
+            Sat* temp = satNode->m_left;
+            delete satNode;
+            return temp;
+        }
+        //if the node has two children
+        Sat* temp = findMin(satNode->m_right);
+        satNode->m_id = temp->getID();
+        satNode->m_right = remove(satNode->m_right, satNode->getID());
     }
+    //update the height of the node
     updateHeight(satNode);
     satNode = reBal(satNode);
     return satNode;
@@ -336,6 +382,7 @@ Sat* SatNet::findMin(Sat* satNode) {
 	}
 }
 
+//updates the height of the node
 void SatNet::updateHeight(Sat* satNode) {
     int leftHeight = -1;
     int rightHeight = -1;
@@ -350,4 +397,12 @@ void SatNet::updateHeight(Sat* satNode) {
         rightHeight = satNode->m_right->m_height;
     }
     satNode->m_height = max(leftHeight, rightHeight) + 1;
+}
+
+//testBST
+void SatNet::testBST(Sat* satNode) const {
+    if (satNode != nullptr) {
+		testBST(satNode->m_left);
+		testBST(satNode->m_right);
+	}
 }

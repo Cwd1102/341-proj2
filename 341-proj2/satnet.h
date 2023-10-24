@@ -132,6 +132,8 @@ private:
     void clear(Sat* satNode);
     int countSatellites(INCLIN degree, Sat* satNode) const;
     void removeDeorbited(Sat* satNode);
+    void testBST(Sat* satNode) const;
+
 
 };
 #endif

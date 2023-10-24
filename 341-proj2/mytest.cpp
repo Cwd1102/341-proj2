@@ -110,7 +110,7 @@ class Tester {
 public:
     bool insertNormal();
     bool insertEdge();
-    bool interstError();
+    bool insertError();
     bool removeNormal();
     bool removeEdge();
     bool removeError();
@@ -124,6 +124,9 @@ public:
     bool testAssignment();
     bool testInsertComplexity();
     bool testRemoveComplexity();
+    bool testEmptyObject();
+    bool testBST();
+    bool testBST2();
 
 private:
 };
@@ -147,12 +150,12 @@ int main() {
 				cout << "insertEdge" << FAIL << endl;
 	}
 
-    cout << "Testing interstError" << endl;
-    if (myTester.interstError()) {
-				cout << "interstError" << PASS << endl;
+    cout << "Testing insertError" << endl;
+    if (myTester.insertError()) {
+				cout << "insertError" << PASS << endl;
 	}
     else {
-				cout << "interstError" << FAIL << endl;
+				cout << "insertError" << FAIL << endl;
 	}
 
     cout << "Testing removeNormal" << endl;
@@ -250,6 +253,38 @@ int main() {
 				cout << "testInsertComplexity" << FAIL << endl;
 	}
 
+    cout << "Testing testRemoveComplexity" << endl;
+    if (myTester.testRemoveComplexity()) {
+				cout << "testRemoveComplexity" << PASS << endl;
+	}
+    else {
+				cout << "testRemoveComplexity" << FAIL << endl;
+	}
+
+    cout << "Testing testEmptyObject" << endl;
+    if (myTester.testEmptyObject()) {
+				cout << "testEmptyObject" << PASS << endl;
+	}
+    else {
+				cout << "testEmptyObject" << FAIL << endl;
+	}
+
+    cout << "Testing testBST" << endl;
+    if (myTester.testBST()) {
+				cout << "testBST" << PASS << endl;
+	}
+    else {
+				cout << "testBST" << FAIL << endl;
+	}
+
+    cout << "Testing testBST2" << endl;
+    if (myTester.testBST2()) {
+				cout << "testBST2" << PASS << endl;
+	}
+    else {
+				cout << "testBST2" << FAIL << endl;
+	}
+
 	return 0;
 
 }
@@ -300,7 +335,7 @@ bool Tester::insertEdge() {
 	return true;
 }
 
-bool Tester::interstError() {
+bool Tester::insertError() {
     Random idGen(MINID, MAXID);
     Random inclinGen(0, 3);  // there are 4 inclination
     Random altGen(0, 3);     // there are 4 altitudes
@@ -308,7 +343,7 @@ bool Tester::interstError() {
     Sat tempSat(-20);
 
     int teamSize = 100;
-    int tempArray[100]{};
+    int tempArray[100]{0};
     int ID = 0;
     for (int i = 0; i < teamSize; i++) {
         ID = idGen.getRandNum();
@@ -626,6 +661,7 @@ bool Tester::testAssignment() {
 	return true;
 }
 
+
 bool Tester::testInsertComplexity() {
 	Random idGen(MINID, MAXID);
 	Random inclinGen(0, 3);  // there are 4 inclination
@@ -672,12 +708,118 @@ bool Tester::testInsertComplexity() {
     T2 = (stop - start) / CLOCKS_PER_SEC;
 
     realRatio = T2 / T1;
-    cout << "Expected Ratio: " << expectedRatio << endl;
-    cout << "Real Ratio: " << realRatio << endl;
-
     if (((realRatio) < expectedRatio - .4) or (realRatio > expectedRatio + .4)) {
         return false;
     }
 
+	return true;
+}
+
+bool Tester::testRemoveComplexity() {
+	Random idGen(MINID, MAXID);
+	Random inclinGen(0, 3);  // there are 4 inclination
+	Random altGen(0, 3);     // there are 4 altitudes
+	SatNet network;
+	int teamSize1 = 10000;
+	int teamSize2 = 20000;
+	int tempArray[10000]{};
+	int tempArray2[20000]{};
+	int ID = 0;
+	double start = 0;
+	double stop = 0;
+	double T1 = 0;
+	double T2 = 0;
+	double realRatio = 0;
+	int constant = teamSize2 / teamSize1;
+	double expectedRatio = ((teamSize1 * constant) * log(teamSize1 * constant)) / (teamSize1 * log(teamSize1));
+
+    for (int i = 0; i < teamSize1; i++) {
+		ID = idGen.getRandNum();
+		tempArray[i] = ID;
+		Sat satellite(ID, static_cast<ALT>(altGen.getRandNum()), static_cast<INCLIN>(inclinGen.getRandNum()));
+		network.insert(satellite);
+	}
+    start = clock();
+    for (int i = 0; i < teamSize1; i++) {
+		network.remove(tempArray[i]);
+	}
+    stop = clock();
+	T1 = (stop - start) / CLOCKS_PER_SEC;
+
+	start = 0;
+	stop = 0;
+    
+    for (int i = 0; i < teamSize2; i++) {
+		ID = idGen.getRandNum();
+		tempArray2[i] = ID;
+		Sat satellite(ID, static_cast<ALT>(altGen.getRandNum()), static_cast<INCLIN>(inclinGen.getRandNum()));
+		network.insert(satellite);
+	}
+	start = clock();
+    for (int i = 0; i < teamSize2; i++) {
+		network.remove(tempArray2[i]);
+	}
+	stop = clock();
+	T2 = (stop - start) / CLOCKS_PER_SEC;
+
+	realRatio = T2 / T1 ;
+
+    if (((realRatio) < expectedRatio - .4) or (realRatio > expectedRatio + .4)) {
+		return false;
+	}
+
+	return true;
+}
+
+bool Tester::testEmptyObject() {
+    SatNet network;
+    Sat satellite(0);
+    network.insert(satellite);
+    if (network.m_root != nullptr) {
+		return false;
+	}
+	return true;
+}
+
+bool Tester::testBST() {
+	Random idGen(MINID, MAXID);
+	Random inclinGen(0, 3);  // there are 4 inclination
+	Random altGen(0, 3);     // there are 4 altitudes
+	SatNet network;
+	int teamSize = 100;
+	int tempArray[100]{};
+	int ID = 0;
+	int inclin = 0;
+
+    for (int i = 0; i < teamSize; i++) {
+		ID = idGen.getRandNum();
+		tempArray[i] = ID;
+		Sat satellite(ID, static_cast<ALT>(altGen.getRandNum()), static_cast<INCLIN>(inclinGen.getRandNum()));
+		network.insert(satellite);
+	}
+	network.testBST(network.m_root);
+	return true;
+}
+
+bool Tester::testBST2() {
+    Random idGen(MINID, MAXID);
+    Random inclinGen(0, 3);  // there are 4 inclination
+    Random altGen(0, 3);     // there are 4 altitudes
+    SatNet network;
+    int teamSize = 100;
+    int tempArray[100]{};
+    int ID = 0;
+    int count = 0;
+
+    for (int i = 0; i < teamSize; i++) {
+        ID = idGen.getRandNum();
+        tempArray[i] = ID;
+        Sat satellite(ID, static_cast<ALT>(altGen.getRandNum()), static_cast<INCLIN>(inclinGen.getRandNum()));
+        network.insert(satellite);
+    }
+    for (int i = 0; i < teamSize; i++) {
+		network.remove(tempArray[i]);
+	}
+	network.testBST(network.m_root);
 	return true;
 }
